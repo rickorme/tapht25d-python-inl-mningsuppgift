@@ -3,9 +3,9 @@ import random
 class Grid:
     """Representerar spelplanen. Du kan ändra standardstorleken och tecknen för olika rutor. """
     width = 36
-    height = 12
-    empty = "."  # Tecken för en tom ruta
-    wall = "■"   # Tecken för en ogenomtränglig vägg
+    height = 24
+    empty = "⚫"  # Tecken för en tom ruta
+    wall = "🧱"   # Tecken för en ogenomtränglig vägg
 
     def __init__(self):
         """Skapa ett objekt av klassen Grid"""
@@ -13,6 +13,9 @@ class Grid:
         self.data = [[self.empty for y in range(self.width)] for z in range(
             self.height)]
 
+    def is_obstruction(self, x, y):
+        """Returnerar True om det inte går att gå på den aktuella rutan"""
+        return self.get(x, y) == self.wall
 
     def get(self, x, y):
         """Hämta det som finns på en viss position"""
@@ -36,7 +39,7 @@ class Grid:
             row = self.data[y]
             for x in range(len(row)):
                 if x == self.player.pos_x and y == self.player.pos_y:
-                    xs += "@"
+                    xs += "🤤"
                 else:
                     xs += str(row[x])
             xs += "\n"

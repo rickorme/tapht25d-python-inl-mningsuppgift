@@ -1,7 +1,7 @@
 
 class Item:
     """Representerar saker man kan plocka upp."""
-    def __init__(self, name, value=10, symbol="?"):
+    def __init__(self, name, value=10, symbol="🥝"):
         self.name = name
         self.value = value
         self.symbol = symbol
@@ -10,8 +10,15 @@ class Item:
         return self.symbol
 
 
-pickups = [Item("carrot"), Item("apple"), Item("strawberry"), Item("cherry"), Item("watermelon"), Item("radish"), Item("cucumber"), Item("meatball")]
-
+pickups = [Item("carrot", value=20,symbol="🥕"), 
+           Item("apple", value=20, symbol="🍎"), 
+           Item("strawberry", value=20, symbol="🍓"), 
+           Item("cherry", value=20, symbol="🍒"), 
+           Item("watermelon", value=20, symbol="🍉"), 
+           Item("kiwi", value=20, symbol="🥝"), 
+           Item("cucumber", value=20, symbol="🥒"), 
+           Item("doughnut", value=10, symbol="🍩")
+        ]
 
 def randomize(grid):
     for item in pickups:
@@ -22,4 +29,3 @@ def randomize(grid):
             if grid.is_empty(x, y):
                 grid.set(x, y, item)
                 break  # avbryt while-loopen, fortsätt med nästa varv i for-loopen
-
