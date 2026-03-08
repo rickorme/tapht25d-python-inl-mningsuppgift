@@ -1,5 +1,6 @@
 from .grid import Grid
 from .player import Player
+from .enemy import spawn_enemies
 from . import pickups
 from . import specials
 
@@ -13,8 +14,10 @@ g = Grid()
 g.make_walls()
 g.make_inner_walls()
 specials.set_turd_traps(g)
+specials.set_exit(g)
 player = Player(*g.get_random_center_pos()) # "splat" the tuple into x and y
 g.set_player(player)
+spawn_enemies(g)
 pickups.randomize(g)
 
 
@@ -32,7 +35,7 @@ command = "a"
 # Loopa tills användaren trycker Q eller X.
 while not command.casefold() in ["q", "x"]:
     print_status(g)
-
+    player.marker = "🤤"
     command = input("Use WASD to move, i to toggle inventory, Q/X to quit. ")
     command = command.casefold()[:1]
 
@@ -59,11 +62,31 @@ while not command.casefold() in ["q", "x"]:
         elif maybe_item == specials.turd_trap:
             print(f"{maybe_item.symbol} You stepped on a turd trap! {maybe_item.value} points.")
             score += maybe_item.value
+            player.marker = "🤮"
+
+        elif maybe_item == specials.exit:
+            # If the player has collected all the pickups, they can win by stepping on the exit 
+            if len(inventory) == sum(item.count for item in pickups.pickups):
+                print(f"{maybe_item.symbol} You found the exit! You win!")
+                break
 
         if grace_period > 0:
             grace_period -= 1
         else:
-            score = max(0, score - 1)  # straffa spelaren genom att ta bort poäng     
+            score = max(0, score - 1)  # straffa spelaren genom att ta bort poäng  
+
+        
+
+        ''' Enemy movement should happen after the player has moved, but before we print the status again.
+        This way, the player can see the consequences of their move (like stepping on a trap or picking up an item) before the enemies move. '''
+        for enemy in g.enemies:
+            enemy.hone_in_on_player(player, g)
+            if enemy.pos_x == player.pos_x and enemy.pos_y == player.pos_y:
+                print(f"{enemy.marker} An enemy got you! {enemy.harm} points.")
+                score += enemy.harm
+                player.marker = "🤕"
+                # remove the enemy from the grid            
+                g.remove_enemy(enemy)
 
     elif command == "i":
         show_inventory= not show_inventory

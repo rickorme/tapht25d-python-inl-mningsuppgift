@@ -1,7 +1,5 @@
-import re
-
-
 class Player:
+    
     marker = "🤤"
 
     def __init__(self, x, y):
@@ -50,5 +48,3 @@ class Player:
 
     def get_item(self, grid):
         return grid.get(self.pos_x, self.pos_y)   
-
-

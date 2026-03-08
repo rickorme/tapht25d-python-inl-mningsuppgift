@@ -2,8 +2,8 @@ import random
 
 class Grid:
     """Representerar spelplanen. Du kan ändra standardstorleken och tecknen för olika rutor. """
-    width = 36
-    height = 24
+    width = 30
+    height = 22
     empty = "⚫"  # Tecken för en tom ruta
     wall = "🧱"   # Tecken för en ogenomtränglig vägg
 
@@ -12,10 +12,19 @@ class Grid:
         # Spelplanen lagras i en lista av listor. Vi använder "list comprehension" för att sätta tecknet för "empty" på varje plats på spelplanen.
         self.data = [[self.empty for y in range(self.width)] for z in range(
             self.height)]
+        self.player = None
+        self.enemies = []
 
     def is_obstruction(self, x, y):
         """Returnerar True om det inte går att gå på den aktuella rutan"""
         return self.get(x, y) == self.wall
+    
+    def is_enemy(self, x, y):
+        """Return True if there is an enemy on the current tile"""
+        for enemy in self.enemies:
+            if enemy.pos_x == x and enemy.pos_y == y:
+                return True
+        return False
 
     def get(self, x, y):
         """Hämta det som finns på en viss position"""
@@ -27,6 +36,12 @@ class Grid:
 
     def set_player(self, player):
         self.player = player
+
+    def add_enemy(self, enemy):
+        self.enemies.append(enemy)
+
+    def remove_enemy(self, enemy):
+        self.enemies.remove(enemy)
 
     def get_random_center_pos(self, percentage=30):
         """
@@ -68,9 +83,18 @@ class Grid:
             row = self.data[y]
             for x in range(len(row)):
                 if x == self.player.pos_x and y == self.player.pos_y:
-                    xs += "🤤"
-                else:
-                    xs += str(row[x])
+                    xs += self.player.marker
+                
+                else: 
+                    # Check for enemies on this tile
+                    enemy_here = False
+                    for enemy in self.enemies:
+                        if x == enemy.pos_x and y == enemy.pos_y:
+                            xs += enemy.marker
+                            enemy_here = True
+                            break
+                    if not enemy_here:
+                        xs += str(row[x])
             xs += "\n"
         return xs
 
@@ -127,7 +151,7 @@ class Grid:
         return None, cw_count, ccw_count
 
     def make_inner_walls(self):
-        """Skapa ett antal väggar på slumpmässiga positioner."""
+        """Create random inner walls on the grid, with logic to prevent boxing in areas."""
         # generate a random number of walls to create, between 3 and 8
         num_of_walls = random.randint(3, 8)
         print(f"Creating {num_of_walls} inner walls...")
@@ -153,7 +177,7 @@ class Grid:
                 start_y = self.get_random_y()
                 if self.is_empty(start_x, start_y):
                     self.set(start_x, start_y, self.wall)
-                    print(f"Starting wall {wall+1} at ({start_x}, {start_y}) with length {wall_length}.")
+                    # print(f"Starting wall {wall+1} at ({start_x}, {start_y}) with length {wall_length}.")
                     wall_started = True
                     x, y = start_x, start_y
 
@@ -174,7 +198,7 @@ class Grid:
                         possible_moves.append((dx, dy))
 
                 if not possible_moves:
-                    print("No more possible moves for this wall. Final length: ", i)
+                    # print("No more possible moves for this wall. Final length: ", i)
                     break  # no more moves available, stop building this wall
                 else:
 
@@ -182,11 +206,12 @@ class Grid:
                         # if this is the first move, just pick a random direction
                         current_direction = random.choice(possible_moves)
                         new_direction = current_direction
-                        print(f"First move for wall {wall+1}: {new_direction}")
+                        # print(f"First move for wall {wall+1}: {new_direction}")
                     else:
-                        print(f"Possible moves for wall {wall+1}: {possible_moves}, current direction: {current_direction}, CW count: {consecutive_clockwise}, CCW count: {consecutive_anticlockwise}")
+                        # print(f"Possible moves for wall {wall+1}: {possible_moves}, current direction: {current_direction}, CW count: {consecutive_clockwise}, CCW count: {consecutive_anticlockwise}")
                         # first check if we can continue in the same direction
                         can_continue_straight = current_direction in possible_moves
+                        # then check if we can turn (but only allow turning if it doesn't lead to excessive turning in the same direction)
                         can_turn = (can_continue_straight and len(possible_moves) > 1) or (can_continue_straight == False)
 
                         if can_continue_straight and not can_turn:
@@ -208,8 +233,8 @@ class Grid:
                                 break  # Wall is trapped, stop building it
                         else:
                             
-                            # 80% chance to go straight, IF straight is actually an option
-                            if random.randint(1, 10) <= 8:
+                            # 90% chance to go straight, IF straight is actually an option
+                            if random.randint(1, 10) <= 9:
                                 new_direction = current_direction
                             else:
                                 new_direction, consecutive_clockwise, consecutive_anticlockwise = self.get_valid_turn(
@@ -229,7 +254,7 @@ class Grid:
                     y += new_direction[1]
                     self.set(x, y, self.wall)
                     current_direction = new_direction
-                    print(f"Placed wall segment at ({x}, {y}), new direction: {current_direction}, CW count: {consecutive_clockwise}, CCW count: {consecutive_anticlockwise}")
+                    # print(f"Placed wall segment at ({x}, {y}), new direction: {current_direction}, CW count: {consecutive_clockwise}, CCW count: {consecutive_anticlockwise}")
                          
 
 
