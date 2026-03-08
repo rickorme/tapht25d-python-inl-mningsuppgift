@@ -1,22 +1,24 @@
 import random
 
+from .debug import debug_print
+
 class Grid:
-    """Representerar spelplanen. Du kan ändra standardstorleken och tecknen för olika rutor. """
+    """Represents the game board. You can change the default size and characters for different squares. """
     width = 30
     height = 22
     empty = "⚫"  # Tecken för en tom ruta
     wall = "🧱"   # Tecken för en ogenomtränglig vägg
 
     def __init__(self):
-        """Skapa ett objekt av klassen Grid"""
-        # Spelplanen lagras i en lista av listor. Vi använder "list comprehension" för att sätta tecknet för "empty" på varje plats på spelplanen.
+        """Create an object of the Grid class"""
+        # The game board is stored as a list of lists. We use "list comprehension" to set the character for "empty" on each position on the game board.
         self.data = [[self.empty for y in range(self.width)] for z in range(
             self.height)]
         self.player = None
         self.enemies = []
 
     def is_obstruction(self, x, y):
-        """Returnerar True om det inte går att gå på den aktuella rutan"""
+        """Returns True if it is not possible to walk on the current square"""
         return self.get(x, y) == self.wall
     
     def is_enemy(self, x, y):
@@ -27,11 +29,11 @@ class Grid:
         return False
 
     def get(self, x, y):
-        """Hämta det som finns på en viss position"""
+        """Retrieve what is at a specific position"""
         return self.data[y][x]
 
     def set(self, x, y, value):
-        """Ändra vad som finns på en viss position"""
+        """Change what is in a specific position"""
         self.data[y][x] = value
 
     def set_player(self, player):
@@ -42,6 +44,25 @@ class Grid:
 
     def remove_enemy(self, enemy):
         self.enemies.remove(enemy)
+
+    def coordinates_within_bounds(self, x, y):
+        """Check if the given coordinates are within the bounds of the grid."""
+        within_bounds = 0 <= x < self.width and 0 <= y < self.height
+        debug_print(f"Checking bounds for ({x}, {y}): {within_bounds}")
+        return within_bounds
+
+    def get_objects_around_player(self):
+        """Return a list of all objects in the 8 spots around the player."""
+        objects = []
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                if dx == 0 and dy == 0:
+                    continue  # skip the player's own tile
+                x = self.player.pos_x + dx
+                y = self.player.pos_y + dy
+                if 0 <= x < self.width and 0 <= y < self.height:
+                    objects.append([self.get(x, y), x, y])  # include the coordinates for reference 
+        return objects
 
     def get_random_center_pos(self, percentage=30):
         """
@@ -73,11 +94,11 @@ class Grid:
         return spawn_x, spawn_y
 
     def clear(self, x, y):
-        """Ta bort item från position"""
+        """Remove item from position and set it to empty"""
         self.set(x, y, self.empty)
 
     def __str__(self):
-        """Gör så att vi kan skriva ut spelplanen med print(grid)"""
+        """Enable printing the game board with print(grid)"""
         xs = ""
         for y in range(len(self.data)):
             row = self.data[y]
@@ -177,7 +198,7 @@ class Grid:
                 start_y = self.get_random_y()
                 if self.is_empty(start_x, start_y):
                     self.set(start_x, start_y, self.wall)
-                    # print(f"Starting wall {wall+1} at ({start_x}, {start_y}) with length {wall_length}.")
+                    debug_print(f"Starting wall {wall+1} at ({start_x}, {start_y}) with length {wall_length}.")
                     wall_started = True
                     x, y = start_x, start_y
 
@@ -193,12 +214,12 @@ class Grid:
                 for dx, dy in DIRECTIONS:
                     check_x = x + dx
                     check_y = y + dy
-                    # print(f"Checking position ({check_x}, {check_y}) for wall placement.")
+                    debug_print(f"Checking position ({check_x}, {check_y}) for wall placement.")
                     if self.is_empty(check_x, check_y):
                         possible_moves.append((dx, dy))
 
                 if not possible_moves:
-                    # print("No more possible moves for this wall. Final length: ", i)
+                    debug_print("No more possible moves for this wall. Final length: ", i)
                     break  # no more moves available, stop building this wall
                 else:
 
@@ -206,9 +227,9 @@ class Grid:
                         # if this is the first move, just pick a random direction
                         current_direction = random.choice(possible_moves)
                         new_direction = current_direction
-                        # print(f"First move for wall {wall+1}: {new_direction}")
+                        debug_print(f"First move for wall {wall+1}: {new_direction}")
                     else:
-                        # print(f"Possible moves for wall {wall+1}: {possible_moves}, current direction: {current_direction}, CW count: {consecutive_clockwise}, CCW count: {consecutive_anticlockwise}")
+                        debug_print(f"Possible moves for wall {wall+1}: {possible_moves}, current direction: {current_direction}, CW count: {consecutive_clockwise}, CCW count: {consecutive_anticlockwise}")
                         # first check if we can continue in the same direction
                         can_continue_straight = current_direction in possible_moves
                         # then check if we can turn (but only allow turning if it doesn't lead to excessive turning in the same direction)
@@ -254,21 +275,20 @@ class Grid:
                     y += new_direction[1]
                     self.set(x, y, self.wall)
                     current_direction = new_direction
-                    # print(f"Placed wall segment at ({x}, {y}), new direction: {current_direction}, CW count: {consecutive_clockwise}, CCW count: {consecutive_anticlockwise}")
+                    debug_print(f"Placed wall segment at ({x}, {y}), new direction: {current_direction}, CW count: {consecutive_clockwise}, CCW count: {consecutive_anticlockwise}")
                          
 
 
-    # Används i filen pickups.py
+    # Used in pickups.py
     def get_random_x(self):
-        """Slumpa en x-position på spelplanen"""
+        """Randomise an x-position on the game board"""
         return random.randint(0, self.width-1)
 
     def get_random_y(self):
-        """Slumpa en y-position på spelplanen"""
+        """Randomise a y-position on the game board"""
         return random.randint(0, self.height-1)
 
-
     def is_empty(self, x, y):
-        """Returnerar True om det inte finns något på aktuell ruta"""
+        """Returns True if there is nothing on the current square"""
         return self.get(x, y) == self.empty
 

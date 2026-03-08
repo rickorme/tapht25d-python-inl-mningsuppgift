@@ -130,11 +130,11 @@ def spawn_enemies(grid):
     for enemy in enemies:
     
         while True:
-            # slumpa en position tills vi hittar en som är ledig
+            # randomise a position till we find one that is empty
             x = grid.get_random_x()
             y = grid.get_random_y()
             if grid.is_empty(x, y):
                 enemy.pos_x = x
                 enemy.pos_y = y
                 grid.add_enemy(enemy)
-                break  # avbryt while-loopen, fortsätt med nästa varv i for-loopen
+                break  # break the while loop, continue with the next iteration of the for loop
